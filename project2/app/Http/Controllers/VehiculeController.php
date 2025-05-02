@@ -1,0 +1,124 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use App\Models\UtilisateurPrincipale;
+use App\Models\Vehicule;
+use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+
+class VehiculeController extends Controller
+{
+    public function save(Request $request) {
+        if(!auth()->guard('user_principale')->check())
+            return redirect(route('auth.login'));
+        
+        if(session()->has('guard'))
+            Auth::shouldUse(session('guard'));
+
+        $validated = $request->validate([
+            'marque' => 'required|string',
+            'matriculation' => 'required|string',
+            'type' => 'required|string'
+        ],[
+            'marque.required' => 'La marque est requise.',
+            'matriculation.required' => 'La matriculation est requise.',
+            'type.required' => 'Le type est requis.',
+        ]);
+
+        $compte = UtilisateurPrincipale::find( auth()->guard('user_principale')->id());
+
+        try {
+            $vehicule = $compte->vehicule()->create($validated);
+            if($vehicule)
+                return redirect()->back()->with([
+                    'create' => true,
+                    'status' => 'success'
+                ]);
+        } catch(QueryException $e) {
+            if($e->errorInfo[1] == 1062)
+                return redirect()->back()->with([
+                    'create'=> true,
+                    'status' => 'unique'
+                ]);
+            
+            return redirect()->back()->with( [
+                'create'=> true,
+                'status' => 'failed'
+            ]);
+        }
+    }
+
+    public function show(Request $request) {
+        $search = $request->input('search');
+
+        $query = Vehicule::query();
+
+        if($search) 
+            $vehicules = $query->where('matriculation', $search);
+
+        $vehicules = $query->paginate(10);
+        $vehicules->appends(['search' => $search]);
+
+        return view('details.vehicules',['vehicules' => $vehicules]);
+    }
+
+    public function form($id) {
+        $vehicule = Vehicule::find($id);
+        return view('user_principale.updateV', ['vehicule'=> $vehicule]);
+    }
+
+    public function update(Request $request, $id) {
+        $validated = $request->validate([
+            'marque' => 'required|string',
+            'matriculation' => 'required|string',
+            'type' => 'required|string'
+        ],[
+            'marque.required' => 'La marque est requise.',
+            'matriculation.required' => 'La matriculation est requise.',
+            'type.required' => 'Le type est requis.',
+        ]);
+
+        $vehicule = Vehicule::find($id);
+
+        $vehicule->marque = $validated['marque'];
+        $vehicule->matriculation = $validated['matriculation'];
+        $vehicule->type = $validated['type'];
+        try {
+            if($vehicule->save())
+                return redirect(route('vehicules.display'))->with([
+                    'create' => true,
+                    'status' => 'success'
+                ]);
+        } catch(QueryException $e) {
+            if($e->errorInfo[1] == 1062)
+                return redirect()->back()->with([
+                    'create' => true,
+                    'status' => 'unique'
+                ]);
+
+            return redirect()->back()->with([
+                'create' => true,
+                'status'=> 'failed'
+            ]);
+        }
+    }
+
+    public function destroy($id) {
+        $vehicule = Vehicule::find($id);
+
+        try{
+            if($vehicule->delete())
+                return redirect(route('vehicules.display'))->with([
+                    'delete' => true,
+                    'status' => 'success'
+                ]);
+        } catch(QueryException $e) {
+            return redirect(route('vehicules.display'))->with([
+                'delete' => true,
+                'status' => 'failed'
+            ]);   
+        }
+    }
+}
