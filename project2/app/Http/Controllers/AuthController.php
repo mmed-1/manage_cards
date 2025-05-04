@@ -18,7 +18,12 @@ class AuthController extends Controller
             'email.required' => 'Il faut ajouter votre email',
             'password.required' => 'Password est un champ obligatoire'
         ]);
-        // If this returns FALSE, the hash was NOT generated from "forzaInter".);
+        
+        auth()->guard('admin')->logout();
+        auth()->guard('user')->logout();
+        auth()->guard('user_principale')->logout();
+        session()->invalidate();
+        session()->regenerateToken();
 
         if (Auth::guard('admin')->attempt($validated)) {
             $admin = Auth::guard('admin')->user();
