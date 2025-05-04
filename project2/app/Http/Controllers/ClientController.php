@@ -9,16 +9,22 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class ClientController extends Controller
 {
-    public function create(Request $request) {
+
+    public function test_connection() {
         if (!auth()->guard('user_principale')->check() && !auth()->guard('user')->check()) 
             return redirect(route('auth.login'))->withErrors(['auth' => 'Authentication required']);
 
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+    }
+
+    public function create(Request $request) {
+        $this->test_connection();
         $validated = $request->validate([
             "nom"=> "string|required",
             "prenom" => "string|required",
@@ -30,7 +36,8 @@ class ClientController extends Controller
             'email.email' => 'il faut entrer un email'
         ]);
         try {
-            $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? Utilisateur::find(auth::guard('user')->id());
+            $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? 
+                                                    Utilisateur::find(auth::guard('user')->id());
             if($user) {
                 $client = $user->clients()->create($validated);
                 if($client) {
@@ -59,8 +66,50 @@ class ClientController extends Controller
         }
     }
 
-    public function display_all(): View {
-        $clients = Client::paginate(10);
+    public function display_all(Request $request): View {
+        $this->test_connection();
+
+        $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? 
+                                                    Utilisateur::find(auth::guard('user')->id());
+
+        $validated = $request->validate([
+            'search' => 'required|string'
+        ], [
+            'search.required' => 'Il faut entrer des informations'
+        ]);
+
+        $search = $request->get('search');
+
+        $query = Client::query();
+
+        $clients = $query->where(function ($q) use ($user) {
+            if($user instanceof UtilisateurPrincipale) {
+                $q->where('clients.user_principale_id', $user->user_principale_id)
+                    ->orWhereIn('clients.user_id', function ($subQ) use ($user) {
+                        $subQ->select('user_id')
+                            ->from('utilisateurs')
+                            ->where('user_principale_id', $user->user_principale_id);
+                    });
+            } else {
+                $q->where('clients.user_id', $user->user_id)
+                    ->orWhere('clients.user_principale_id', $user->user_principale_id)
+                    ->orWhereIn('clients.user_id', function ($subQ) use ($user) {
+                        $subQ->select('user_id')
+                            ->from('utilisateurs')
+                            ->where('user_principale_id', $user->user_principale_id);
+                    });
+            }
+        });
+
+        if ($search) {
+            $clients = $clients->where(function ($q) use ($search) {
+                $q->where(DB::raw("CONCAT(prenom, ' ', nom)"), 'LIKE', "%{$search}%")
+                  ->orWhere('email', $search);
+            });
+        }
+
+        $clients = $clients->paginate(10);
+
         return view('details.clients', ['clients' => $clients]);
     }
 
@@ -70,6 +119,7 @@ class ClientController extends Controller
     }
 
     public function update(Request $request, $id) {
+        $this->test_connection();
         if($request->input('reset') === 'Annuler')
             return redirect(route('display.clients'));
 
@@ -111,6 +161,7 @@ class ClientController extends Controller
     }
 
     public function delete($id) {
+        $this->test_connection();
         $client = Client::find($id);
         if($client->delete()) {
             return redirect()->back()->with([
@@ -125,6 +176,7 @@ class ClientController extends Controller
     }
 
     public function detaille($id) {
+        $this->test_connection();
         $client = Client::find($id);
         
         $cartes = $client->carte_sim;
