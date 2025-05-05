@@ -78,17 +78,18 @@ class CarteBlrController extends Controller
                                                 Utilisateur::find(auth()->guard('user')->id());
 
 
-        $validated = $request->validate([
-            'search' => 'regex:/^[0-9]+$/'
-        ],[
-            'search.regex' => 'Entrer un numero s\'il vous plait'
-        ]);
+            $request->validate([
+                'search' => 'nullable|regex:/^[0-9]+$/'
+            ],[
+                'search.regex' => 'Entrer un numero s\'il vous plait'
+            ]);
 
+        
         $search = $request->input('search');
 
         $query = CarteSImBlr::query();
 
-        $cartes = $query->where(function ($subQ) use ($user) {
+        $query->where(function ($subQ) use ($user) {
             if($user instanceof UtilisateurPrincipale) {
                 $subQ->where('carte_sim_blr.user_principale_id', $user->user_principale_id)
                      ->orWhereIn('carte_sim_blr.user_id', function ($q) use ($user) {
@@ -108,7 +109,7 @@ class CarteBlrController extends Controller
         });
 
         if($search) {
-            $cartes = $query->where('carte_sim_blr.num_carte', $search);
+            $query->where('carte_sim_blr.num_carte', $search);
         }
 
         $cartes = $query->paginate(10);
@@ -176,5 +177,36 @@ class CarteBlrController extends Controller
                 'status' => 'failed'
             ]);
         }
+    }
+
+    public function display_admin(Request $request) {
+        if(!auth()->guard('admin')->check()) return redirect(route('auth.login'));
+        if(session()->has('guard')) Auth::shouldUse(session('guard'));
+
+        $search = $request->get('search');
+
+        $query = CarteSImBlr::query();
+
+        if($search) {
+            $query->where('carte_sim_blr.num_carte', $search)
+                ->orWhere('carte_sim_blr.user_principale_id', function($subQ) use ($search) {
+                    $subQ->select('user_principale_id')
+                         ->from('utilisateurs_principale')
+                         ->whereRaw("CONCAT(prenom, ' ', nom) LIKE ?", ['%' . $search . '%']);
+                })
+                ->orWhereIn('carte_sim_blr.user_id', function ($q) use ($search) {
+                    $q->select('user_id')
+                      ->from('utilisateurs')
+                      ->where('user_principale_id', function ($subQ) use ($search) {
+                        $subQ->select('user_principale_id')
+                         ->from('utilisateurs_principale')
+                         ->whereRaw("CONCAT(prenom, ' ', nom) LIKE ?", ['%' . $search . '%']);
+                      });
+                });
+        }
+
+        $cartes = $query->get();
+
+        return view('admin.blr', ['cartes' => $cartes]);
     }
 }

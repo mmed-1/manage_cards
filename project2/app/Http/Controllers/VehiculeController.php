@@ -10,12 +10,16 @@ use Illuminate\Support\Facades\Auth;
 
 class VehiculeController extends Controller
 {
-    public function save(Request $request) {
+    public function test_connection() {
         if(!auth()->guard('user_principale')->check())
             return redirect(route('auth.login'));
         
         if(session()->has('guard'))
             Auth::shouldUse(session('guard'));
+    }
+
+    public function save(Request $request) {
+        $this->test_connection();
 
         $validated = $request->validate([
             'marque' => 'required|string',
@@ -51,9 +55,13 @@ class VehiculeController extends Controller
     }
 
     public function show(Request $request) {
+        $this->test_connection();
         $search = $request->input('search');
 
         $query = Vehicule::query();
+        $user = UtilisateurPrincipale::find( auth()->guard('user_principale')->id());
+
+        $query->where('vehicules.user_principale_id', $user->user_principale_id);
 
         if($search) 
             $vehicules = $query->where('matriculation', $search);

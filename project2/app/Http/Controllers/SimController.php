@@ -13,8 +13,8 @@ use Illuminate\Support\Facades\Auth;
 
 class SimController extends Controller
 {
-    // Controller
-    public function createSim(Request $request) {
+
+    public function test_connection() {
         if (!auth()->guard('user_principale')->check() && !auth()->guard('user')->check()) {
             return redirect(route('auth.login'))->withErrors(['auth' => 'Vous devez être connecté pour accéder à cette page.']);
         }
@@ -22,6 +22,11 @@ class SimController extends Controller
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+    }
+
+    // Controller
+    public function createSim(Request $request) {
+        $this->test_connection();
 
         $validated = $request->validate([
             'ice' => 'required|string|regex:/^[0-9]+$/',
@@ -89,24 +94,47 @@ class SimController extends Controller
    
 
     public function displayCartes(Request $request) {
-        $validated = $request->validate([
-            'search' => 'regex:/^[0-9]+$/'
-        ],[
-            'search.regex' => 'Entrer un numero s\'il vous plait'
-        ]);
+        $this->test_connection();
+        if ($request->filled('search')) {
+            $request->validate([
+                'search' => 'regex:/^[0-9]+$/'
+            ], [
+                'search.regex' => 'Entrer un numero s\'il vous plait'
+            ]);
+        }
+
+        $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? 
+                                                Utilisateur::find(auth::guard('user')->id());
 
         $search = $request->input('search');
 
         $query = CarteSIm::query();
 
-        if($search)
-            $query->where('ice', $search)
-                  ->orWhere('num_carte_sim', $search);
-        
-        $cartes = $query->paginate(10);
+        $query->where(function ($subQ) use ($user) {
+            if($user instanceof UtilisateurPrincipale) {
+                $subQ->where('carte_sim.user_principale_id', $user->user_principale_id)
+                     ->orWhereIn('carte_sim.user_id', function ($q) use ($user) {
+                        $q->select('user_id')
+                          ->from('utilisateurs')
+                          ->where('user_principale_id', $user->user_principlae_id);
+                    });
+            } else {
+                $subQ->where('carte_sim.user_principale_id', $user->user_principale_id)
+                    ->orWhere('carte_sim.user_id', $user->user_id)
+                    ->orWhereIn('carte_sim.user_id', function ($q) use ($user) {
+                        $q->select('user_id')
+                          ->from('utilisateurs')
+                          ->where('user_principale_id', $user->user_principale_id);
+                    });
+            }
+        });
 
-        // Keep the search query in pagination links
-        $cartes->appends(['search' => $search]);
+        if($search) {
+            $query->where('ice', 'LIKE', '%'. $search .'%')
+                ->orWhere('num_carte_sim','LIKE', '%'. $search .'%');
+        }
+
+        $cartes = $query->get();
 
         return view('details.details_cartes', ['cartes' => $cartes]);
     }
@@ -117,6 +145,7 @@ class SimController extends Controller
     }
 
     public function updateCarte(Request $request, $id) {
+        $this->test_connection();
         $carteSIm = CarteSIm::find($id);
         
         if($carteSIm) {
@@ -161,6 +190,7 @@ class SimController extends Controller
     }
 
     public function destroyCarte($id) {
+        $this->test_connection();
         $carteSIm = CarteSIm::find($id);
 
         if($carteSIm->delete()) {

@@ -66,23 +66,22 @@ class ClientController extends Controller
         }
     }
 
-    public function display_all(Request $request): View {
+    public function show(Request $request): View {
         $this->test_connection();
 
         $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? 
                                                     Utilisateur::find(auth::guard('user')->id());
+        
 
-        $validated = $request->validate([
-            'search' => 'required|string'
-        ], [
-            'search.required' => 'Il faut entrer des informations'
+        $request->validate([
+            'search' => 'string'
         ]);
 
-        $search = $request->get('search');
+        $search = $request->input('search');
 
         $query = Client::query();
 
-        $clients = $query->where(function ($q) use ($user) {
+        $query->where(function ($q) use ($user) {
             if($user instanceof UtilisateurPrincipale) {
                 $q->where('clients.user_principale_id', $user->user_principale_id)
                     ->orWhereIn('clients.user_id', function ($subQ) use ($user) {
@@ -102,14 +101,14 @@ class ClientController extends Controller
         });
 
         if ($search) {
-            $clients = $clients->where(function ($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where(DB::raw("CONCAT(prenom, ' ', nom)"), 'LIKE', "%{$search}%")
                   ->orWhere('email', $search);
             });
         }
 
-        $clients = $clients->paginate(10);
-
+        $clients = $query->paginate(10);
+        
         return view('details.clients', ['clients' => $clients]);
     }
 

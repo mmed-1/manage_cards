@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class EquipementController extends Controller
 {
-    public function create(Request $request) {
+    private function test_connection() {
         if (!auth()->guard('admin')->check()) {
             return redirect(route('auth.login'))->withErrors(['auth' => 'Authentication required']);
         }
@@ -18,6 +18,10 @@ class EquipementController extends Controller
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+    }
+
+    public function create(Request $request) {
+        $this->test_connection();        
 
         $validated = $request->validate([
             'ip_address' => 'string|required|ip',
@@ -54,6 +58,7 @@ class EquipementController extends Controller
     }
 
     public function displayEquipements() {
+        $this->test_connection();
         $equipements = Equipement::simplePaginate(5); //! maybe here also
         return view('details.equipementDet', ['equipements' => $equipements]);
     }
@@ -64,6 +69,7 @@ class EquipementController extends Controller
     }
 
     public function update(Request $request, $id) {
+        $this->test_connection();
         $validated = $request->validate([
             'ipAddress' => 'string|required|ip',
             'nbPorts' => 'string|required|regex:/^[0-9]+$/'
@@ -102,6 +108,7 @@ class EquipementController extends Controller
     }
 
     public function destroy($id) {
+        $this->test_connection();
         $equipement = Equipement::find($id);
         if($equipement->delete()) {
             return redirect()->back()->with([

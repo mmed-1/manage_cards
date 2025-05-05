@@ -15,6 +15,13 @@ use Illuminate\Support\Facades\Mail;
 
 class UserController extends Controller
 {
+    public function test_connection() {
+        if(!auth()->guard('user_principale')->check())
+            return redirect(route('auth.login'));
+
+        if(session()->has('guard'))
+            Auth::shouldUse(session('guard'));
+    }
 
     public function testUnicite($email): bool {
         return Admin::where("email", $email)->exists() ||
@@ -22,11 +29,7 @@ class UserController extends Controller
     }
 
     public function save(Request $request) {
-        if(!auth()->guard('user_principale')->check())
-            return redirect(route('auth.login'));
-
-        if(session()->has('guard'))
-            Auth::shouldUse(session('guard'));
+        $this->test_connection();
 
         $user = UtilisateurPrincipale::find(auth()->guard('user_principale')->id());
 
@@ -89,9 +92,16 @@ class UserController extends Controller
     }
 
     public function show(Request $request) {
+        $this->test_connection();
+        
+        $user = UtilisateurPrincipale::find(auth()->guard('user_principale')->id());
+
         $search = $request->input('search');
 
         $query = Utilisateur::query();
+
+        $query->where('utilisateurs.user_principale_id', $user->user_principale_id);
+        
         if($search) {
             $query->where(function ($q) use ($search) {
                 $q->whereRaw("CONCAT(prenom, ' ', nom) LIKE ?", ["%$search%"])
@@ -105,6 +115,7 @@ class UserController extends Controller
     }
 
     public function delete($id) {
+        $this->test_connection();
         $user = Utilisateur::find($id);
         try {
             if($user->delete()) 
@@ -126,11 +137,7 @@ class UserController extends Controller
     }
 
     public function update(Request $request, $id) {
-        if(!auth()->guard('user_principale')->check())
-            return redirect(route('auth.login'));
-        
-        if(session()->has('guard'))
-            Auth::shouldUse(session('guard'));
+        $this->test_connection();
 
         $validated = $request->validate([
             'nom' => 'string|required',
