@@ -79,6 +79,9 @@
                     📑 Consulter les cartes SIM
                 </a>
             </li>
+            <li>
+                <a href="{{ route('details.blr') }}">📑 Consulter les cartes BLR</a>
+            </li>
         </ul>
     </main>
     <x-footer></x-footer>

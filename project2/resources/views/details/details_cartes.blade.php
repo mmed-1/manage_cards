@@ -47,13 +47,6 @@
                 </span>
             @endif
         @endif
-        @if ($cartes->isEmpty())
-            <div>
-                <div>
-                    <p>Aucune carte SIM n'a été trouvée avec ce numéro de carte ou ce code ICE.</p>
-                </div>
-            </div>
-        @else
             <table>
                 <thead>
                     <tr>
@@ -66,23 +59,24 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($cartes as $carte)
+                    @forelse ($cartes as $carte)
                         <tr>
                             <td>{{$carte->num_carte_sim}}</td>
                             <td>{{$carte->ice}}</td>
                             <td>{{$carte->operateur}}</td>
                             <td>{{$carte->solde}}Go</td>
                             @php
-                            if ($carte->utilisateur && $carte->utilisateur->nom && $carte->utilisateur->prenom) {
-                                // If utilisateur exists and has nom and prenom
-                                $name = $carte->utilisateur->nom . ' ' . $carte->utilisateur->prenom;
-                            } elseif ($carte->user_principale && $carte->user_principale->nom && $carte->user_principale->prenom) {
-                                // If user_principale exists and has nom and prenom
-                                $name = $carte->user_principale->nom . ' ' . $carte->user_principale->prenom;
-                            } else {
-                                // Default case if both are null or missing
-                                $name = 'N/A';
-                            }
+                                if($carte->user_id) {
+                                    if($carte->user_id == auth()->guard('user')->id())
+                                        $name = 'Vous';
+                                    else
+                                        $name = $carte->utilisateur->prenom . ' ' . $carte->utilisateur->nom;
+                                } elseif($carte->user_principale_id) {
+                                    if($carte->user_principale_id == auth()->guard('user_principale')->id())
+                                        $name = 'Vous';
+                                    else
+                                        $name = $carte->utilisateur_principale->prenom . ' ' . $carte->utilisateur_principale->nom;
+                                } else $name = ' ';
                             @endphp
                         
                             <td>{{ $name }}</td>
@@ -98,10 +92,13 @@
                                 </form>
                         </td>
                         </tr>
-                    @endforeach
+                    @empty
+                    <tr>
+                        <td>Aucune carte trouve</td>
+                    </tr>
+                    @endforelse
                 </tbody>
             </table>
-        @endif
     </main>
     <x-footer></x-footer>
 </body>

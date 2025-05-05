@@ -59,7 +59,7 @@
             <tr>
                 <th>nom complet</th>
                 <th>email</th>
-                <th>Aaction</th>
+                <th>action</th>
             </tr>
         </thead>
         <tbody>
@@ -68,14 +68,14 @@
                     <td>{{ $user->prenom . ' ' . $user->nom }}</td>
                     <td>{{ $user->email }}</td>
                     <td>
-                        <a href="{{ route('update.user1', ['id' => $user->user_id]) }}">✏️</a>
+                        <a href="{{ route('update.user1', ['id' => $user->user_id]) }}">modifier</a>
                         <a href="">detaille</a>
                         <form action="{{ route('user.delete', ['id' => $user->user_id]) }}" method="post"
                             style="display:inline;">
                             @csrf
                             @method('DELETE')
                             <button type="submit" onclick="return confirm('Tu veux supprimer ce compte')">
-                                🗑️
+                                supprimer
                             </button>
                         </form>
                     </td>

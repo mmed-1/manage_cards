@@ -33,9 +33,10 @@
         <table>
             <thead>
                 <tr>
-                    <th>Adresse ip</th>
-                    <th>Nombre de ports</th>
-                    <th>Action</th>
+                    <th>adresse ip</th>
+                    <th>nombre de ports</th>
+                    <th>ajoutee par</th>
+                    <th>action</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,9 +44,17 @@
                     <tr>
                         <td>{{$equipement->ip_address}}</td>
                         <td>{{$equipement->nombre_port}}</td>
-                        <td><a href="{{route('formEqui', ['id' => $equipement->equipement_id])}}">✏️</a></td>
+                        @php
+                            if($equipement->admin_id == auth()->guard('admin')->id())
+                                $name = 'Vous';
+                            else
+                                $name = $equipement->admin->prenom . ' ' . $equipement->admin->nom;
+                        @endphp
+                        <td>{{ $name }}</td>
+                        <td><a href="{{route('formEqui', ['id' => $equipement->equipement_id])}}">modifier</a></td>
+                        <td><a href="">detaille</a></td>
                         <td>
-                            <form action="{{route('deleteEqui', ['id' => $equipement->equipement_id])}}" method="post">
+                            <form action="{{ route('deleteEqui', ['id' => $equipement->equipement_id]) }}" method="post">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" onclick="return confirm('Tu veux supprimer ce equippement')">🗑️</button>

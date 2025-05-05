@@ -68,7 +68,13 @@
                 <tr>
                     <td>{{ $compte->prenom . ' ' . $compte->nom }}</td>
                     <td>{{ $compte->email }}</td>
-                    <td>{{ $compte->admin->prenom . ' ' . $compte->admin->nom}}</td>
+                    @php
+                        if($compte->admin_id == auth()->guard('admin')->id())
+                            $name = 'Vous';
+                        else
+                            $name = $compte->admin->prenom . ' ' . $compte->admin->nom;
+                    @endphp
+                    <td>{{ $name }}</td>
                     <td>
                         <a href="{{ route('show.update', ['id' => $compte->user_principale_id]) }}">✏️</a>
                         <form action="{{ route('compte.delete', ['id' => $compte->user_principale_id]) }}" method="post"

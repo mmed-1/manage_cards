@@ -6,7 +6,7 @@
 <body>
     <header>
         <h1>Creer un client</h1>
-        <a href="{{route('choice')}}">Retour</a>
+        <a href="{{route('choice2')}}">Retour</a>
     </header>
 
     <main>

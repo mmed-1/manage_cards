@@ -15,7 +15,7 @@
                     <a href="{{ route('admin.choice') }}">gestion des equipements</a>
                 </li>
                 <li>
-                    <a href="">consultation des cartes sim</a>
+                    <a href="{{ route('blr.admin') }}">consultation des cartes BLR</a>
                 </li>
             </ul>
         </nav>

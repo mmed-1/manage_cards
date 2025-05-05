@@ -7,9 +7,19 @@
 <body>
     <header>
         <h1>La liste des clients</h1>
-        <a href="{{ route('choice') }}">Retour</a>
+        <a href="{{ route('choice2') }}">← Retour</a>
     </header>
     <main>
+        <form action="{{ route('clients.search') }}" method="post">
+            @csrf
+            <input 
+                type="text" 
+                name="search" 
+                value="{{ request('search') }}" 
+                placeholder="Entrer le nom complet de client ou son email"
+            />
+            <button type="submit">🔎</button>
+        </form>
         @if (session('delete'))
             @if (session('status') === 'success')
                 <span style="color: green;">
@@ -39,18 +49,23 @@
                 </tr>
             </thead>
             <tbody>
-                @foreach ($clients as $client)
+                @forelse ($clients as $client)
                     <tr>
                         <td>{{ $client->nom }}</td>
                         <td>{{ $client->prenom }}</td>
                         <td>{{ $client->email }}</td>
                         @php
-                            if($client->utilisateur && $client->utilisateur->nom && $client->utilisateur->prenom)
-                                $name = $client->utilisateur->prenom . ' ' . $client->utilisateur->nom;
-                            elseif($client->utilisateur_principale && $client->utilisateur_principale->nom && $client->utilisateur_principale->prenom)
-                                $name = $client->utilisateur_principale->prenom . ' ' . $client->utilisateur_principale->nom;
-                            else
-                                $name = '';
+                            if($client->user_id) {
+                                if($client->user_id == auth()->guard('user')->id())
+                                    $name = 'Vous';
+                                else
+                                    $name = $client->utilisateur->prenom . ' ' . $client->utilisateur->nom;
+                            } elseif($client->user_principale_id) {
+                                if($client->user_principale_id == auth()->guard('user_principale')->id())
+                                    $name = 'Vous';
+                                else 
+                                    $name = $client->utilisateur_principale->prenom . ' ' . $client->utilisateur_principale->nom;
+                            } else $name = ' ';
                         @endphp
                         <td>{{ $name }}</td>
                         <td>
@@ -66,7 +81,11 @@
                             </form>
                         </td>
                     </tr>
-                @endforeach
+                @empty
+                    <tr>
+                        <td>Aucun client trouve</td>
+                    </tr>
+                @endforelse
             </tbody>
         </table>
     </main>

@@ -67,14 +67,14 @@
                         <td>{{ $vehicule->type }}</td>
 
                         <td>
-                            <a href="{{ route('vehicule.form2' , ['id' => $vehicule->vehicule_id]) }}">✏️</a>
+                            <a href="{{ route('vehicule.form2' , ['id' => $vehicule->vehicule_id]) }}">modifier</a>
                             <a href="">detaille</a>
                             <form action="{{ route('vehicule.delete', ['id' => $vehicule->vehicule_id]) }}" method="post"
                                 style="display:inline;">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" onclick="return confirm('Tu veux supprimer ce compte')">
-                                    🗑️
+                                    supprimer
                                 </button>
                             </form>
                         </td>
