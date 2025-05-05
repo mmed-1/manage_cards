@@ -33,10 +33,6 @@ Route::prefix('/admin')->group(function () {
     Route::view('/home', 'admin.home')
         ->name('admin.home');
 
-    Route::get('/creation/compte', function () {
-        return view(''); //! don't forget that
-    })->name('creation');
-
     Route::view('/gestion/equipement', 'admin.choice')
         ->name('admin.choice');
 
@@ -83,6 +79,12 @@ Route::prefix('/admin')->group(function () {
 
     Route::delete('/gestion-comptes/delete/compte/{id}', [CompteController::class, 'delete'])
         ->name('compte.delete');
+
+    Route::get('/gestion/carte/blr', [CarteBlrController::class, 'display_admin'])
+        ->name('blr.admin');
+
+    Route::match(['get', 'post'],'/gestion/carte/blr/search', [CarteBlrController::class, 'display_admin'])
+        ->name('blr.search2');
 });
 
 
@@ -102,7 +104,7 @@ Route::prefix('/gestion')->group(function () {
         return view('PAGES.add');
     })->name('add_sim');
 
-    Route::post('/choice/detaille-carte/search', [SimController::class,'displayCartes'])
+    Route::match(['get', 'post'], '/choice/detaille-carte/search', [SimController::class,'displayCartes'])
         ->name('details.search');
 
     Route::get('/choice/detaille-carte', [SimController::class, 'displayCartes'])
@@ -122,8 +124,11 @@ Route::prefix('/gestion')->group(function () {
     Route::post('/client/creation/ajout', [ClientController::class, 'create'])
         ->name('ajout.client');
     
-    Route::get('/client/detaille', [ClientController::class,'display_all'])
+    Route::get('/client/display-all', [ClientController::class,'show'])
         ->name('display.clients');
+
+    Route::match(['get', 'post'], '/client/all/recherche', [ClientController::class,'show'])
+        ->name('clients.search');
 
     Route::view('/client/choice', 'pages.choice2')->name('choice2');
     
@@ -195,4 +200,16 @@ Route::prefix('/gestion')->group(function () {
 
     Route::get('/carte/blr/all', [CarteBlrController::class, 'show'])
         ->name('details.blr');
+
+    Route::post('/carte/blr/recherche', [CarteBlrController::class, 'show'])
+        ->name('blr.search');
+
+    Route::get('/carte/blr/{id}', [CarteBlrController::class, 'found'])
+        ->name('blr.found');
+
+    Route::delete('/carte/blr/{id}/delete', [CarteBlrController::class, 'delete'])
+        ->name('blr.delete');
+
+    Route::post('/carte/blr/{id}/update', [CarteBlrController::class, 'update'])
+        ->name('blr.update');
 });
