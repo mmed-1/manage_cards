@@ -1,0 +1,245 @@
+document.addEventListener("DOMContentLoaded", () => {
+  // DOM Elements
+  const leftSidebar = document.getElementById("leftSidebar")
+  const userSidebar = document.getElementById("userSidebar")
+  const mobileToggle = document.getElementById("mobileToggle")
+  const userMenuToggle = document.getElementById("userMenuToggle")
+  const closeSidebarBtn = document.getElementById("closeSidebarBtn")
+  const closeUserSidebarBtn = document.getElementById("closeUserSidebarBtn")
+  const overlay = document.getElementById("overlay")
+  const body = document.body
+  const statusMessages = document.querySelectorAll(".status-message")
+  const passwordToggles = document.querySelectorAll(".password-toggle")
+  const submenuToggles = document.querySelectorAll(".submenu-toggle")
+  const submenuItems = document.querySelectorAll(".submenu a")
+
+  // State
+  let isLeftSidebarOpen = window.innerWidth > 992
+  let isUserSidebarOpen = false
+
+  // Toggle Left Sidebar
+  const toggleLeftSidebar = () => {
+    isLeftSidebarOpen = !isLeftSidebarOpen
+    leftSidebar.classList.toggle("active", isLeftSidebarOpen)
+    overlay.classList.toggle("active", isLeftSidebarOpen && window.innerWidth <= 992)
+    body.classList.toggle("no-scroll", isLeftSidebarOpen && window.innerWidth <= 992)
+  }
+
+  // Toggle User Sidebar
+  const toggleUserSidebar = () => {
+    isUserSidebarOpen = !isUserSidebarOpen
+    userSidebar.classList.toggle("active", isUserSidebarOpen)
+    overlay.classList.toggle("active", isUserSidebarOpen)
+    body.classList.toggle("no-scroll", isUserSidebarOpen)
+  }
+
+  // Toggle Submenu
+  const toggleSubmenu = (e) => {
+    e.preventDefault()
+    const parent = e.currentTarget.parentElement
+    const menuId =
+      parent.getAttribute("data-menu-id") || parent.querySelector(".submenu-toggle span").textContent.trim()
+    const isActive = parent.classList.contains("active")
+
+    // Close all other open submenus
+    document.querySelectorAll(".has-submenu.active").forEach((item) => {
+      if (item !== parent) {
+        const itemMenuId =
+          item.getAttribute("data-menu-id") || item.querySelector(".submenu-toggle span").textContent.trim()
+        item.classList.remove("active")
+        localStorage.removeItem(`submenu_${itemMenuId}`)
+      }
+    })
+
+    // Toggle current submenu
+    parent.classList.toggle("active", !isActive)
+
+    // Save state to localStorage
+    if (!isActive) {
+      localStorage.setItem(`submenu_${menuId}`, "open")
+    } else {
+      localStorage.removeItem(`submenu_${menuId}`)
+    }
+  }
+
+  // Close All Sidebars
+  const closeAllSidebars = () => {
+    // Only close the left sidebar on mobile
+    if (window.innerWidth <= 992 && isLeftSidebarOpen) {
+      isLeftSidebarOpen = false
+      leftSidebar.classList.remove("active")
+    }
+
+    // Always close the user sidebar
+    if (isUserSidebarOpen) {
+      isUserSidebarOpen = false
+      userSidebar.classList.remove("active")
+    }
+
+    // Hide overlay and restore scrolling
+    overlay.classList.remove("active")
+    body.classList.remove("no-scroll")
+  }
+
+  // Password Toggle
+  passwordToggles.forEach((toggle) => {
+    toggle.addEventListener("click", function () {
+      const targetId = this.getAttribute("data-target")
+      const passwordInput = document.getElementById(targetId)
+
+      if (passwordInput.type === "password") {
+        passwordInput.type = "text"
+        this.querySelector("i").classList.remove("fa-eye")
+        this.querySelector("i").classList.add("fa-eye-slash")
+      } else {
+        passwordInput.type = "password"
+        this.querySelector("i").classList.remove("fa-eye-slash")
+        this.querySelector("i").classList.add("fa-eye")
+      }
+    })
+  })
+
+  // Auto-hide status messages after delay
+  if (statusMessages.length > 0) {
+    setTimeout(() => {
+      statusMessages.forEach((message) => {
+        message.style.opacity = "0"
+        message.style.transform = "translateY(-10px)"
+        message.style.transition = "all 0.5s ease"
+
+        setTimeout(() => {
+          message.style.display = "none"
+        }, 500)
+      })
+    }, 5000)
+  }
+
+  // Event Listeners for Submenu Toggles
+  submenuToggles.forEach((toggle) => {
+    toggle.addEventListener("click", toggleSubmenu)
+  })
+
+  // Event Listeners for Submenu Items
+  submenuItems.forEach((item) => {
+    item.addEventListener("click", (e) => {
+      // Find parent submenu
+      const submenu = item.closest(".submenu")
+      if (submenu) {
+        const parent = submenu.closest(".has-submenu")
+        const menuId =
+          parent.getAttribute("data-menu-id") || parent.querySelector(".submenu-toggle span").textContent.trim()
+        // Save state to localStorage before navigation
+        localStorage.setItem(`submenu_${menuId}`, "open")
+      }
+    })
+  })
+
+  // Event Listeners
+  mobileToggle.addEventListener("click", (e) => {
+    e.stopPropagation()
+    // Close user sidebar if open
+    if (isUserSidebarOpen) {
+      toggleUserSidebar()
+    }
+    toggleLeftSidebar()
+  })
+
+  userMenuToggle.addEventListener("click", (e) => {
+    e.stopPropagation()
+    // Close left sidebar on mobile if open
+    if (window.innerWidth <= 992 && isLeftSidebarOpen) {
+      toggleLeftSidebar()
+    }
+    toggleUserSidebar()
+  })
+
+  closeSidebarBtn.addEventListener("click", () => {
+    toggleLeftSidebar()
+  })
+
+  closeUserSidebarBtn.addEventListener("click", () => {
+    toggleUserSidebar()
+  })
+
+  overlay.addEventListener("click", closeAllSidebars)
+
+  // Prevent clicks inside sidebars from closing them
+  leftSidebar.addEventListener("click", (e) => {
+    e.stopPropagation()
+  })
+
+  userSidebar.addEventListener("click", (e) => {
+    e.stopPropagation()
+  })
+
+  // Handle window resize
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 992) {
+      // On desktop
+      if (!isLeftSidebarOpen) {
+        isLeftSidebarOpen = true
+        leftSidebar.classList.add("active")
+      }
+      // Remove overlay if it was active due to mobile sidebar
+      if (overlay.classList.contains("active") && !isUserSidebarOpen) {
+        overlay.classList.remove("active")
+        body.classList.remove("no-scroll")
+      }
+    } else {
+      // On mobile
+      if (isLeftSidebarOpen) {
+        overlay.classList.add("active")
+      }
+    }
+  })
+
+  // Animation handlers
+  const animateElements = (elements, baseDelay = 0) => {
+    elements.forEach((el, index) => {
+      el.style.animationDelay = `${baseDelay + index * 0.1}s`
+      el.classList.add("animate-in")
+    })
+  }
+
+  // Initialize the dashboard
+  const initDashboard = () => {
+    // Set initial state for left sidebar based on screen size
+    if (window.innerWidth > 992) {
+      leftSidebar.classList.add("active")
+    }
+
+    // Initialize animations
+    animateElements(document.querySelectorAll(".status-message"))
+
+    // Restore submenu state from localStorage
+    document.querySelectorAll(".has-submenu").forEach((submenuParent) => {
+      const menuId =
+        submenuParent.getAttribute("data-menu-id") ||
+        submenuParent.querySelector(".submenu-toggle span").textContent.trim()
+      if (localStorage.getItem(`submenu_${menuId}`) === "open") {
+        submenuParent.classList.add("active")
+      }
+
+      // Also check if any submenu item is active
+      const activeSubmenuItem = submenuParent.querySelector(".submenu li.active")
+      if (activeSubmenuItem) {
+        submenuParent.classList.add("active")
+        localStorage.setItem(`submenu_${menuId}`, "open")
+      }
+    })
+  }
+
+  // Logout handler
+  const logoutBtn = document.querySelector(".logout-btn")
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", (e) => {
+      e.preventDefault()
+      // Add your logout logic here
+      console.log("Logout initiated")
+      window.location.href = "/logout"
+    })
+  }
+
+  // Initialize the dashboard
+  initDashboard()
+})
