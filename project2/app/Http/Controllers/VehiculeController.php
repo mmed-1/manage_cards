@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CarteSIm;
+use App\Models\Client;
 use App\Models\UtilisateurPrincipale;
 use App\Models\Vehicule;
 use Illuminate\Database\QueryException;
@@ -16,10 +18,11 @@ class VehiculeController extends Controller
         
         if(session()->has('guard'))
             Auth::shouldUse(session('guard'));
+        return null;
     }
 
     public function save(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
 
         $validated = $request->validate([
             'marque' => 'required|string',
@@ -55,7 +58,7 @@ class VehiculeController extends Controller
     }
 
     public function show(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $search = $request->input('search');
 
         $query = Vehicule::query();
@@ -78,6 +81,7 @@ class VehiculeController extends Controller
     }
 
     public function update(Request $request, $id) {
+        if($this->test_connection()) return $this->test_connection();
         $validated = $request->validate([
             'marque' => 'required|string',
             'matriculation' => 'required|string',
@@ -114,8 +118,8 @@ class VehiculeController extends Controller
     }
 
     public function destroy($id) {
+        if($this->test_connection()) return $this->test_connection();
         $vehicule = Vehicule::find($id);
-
         try{
             if($vehicule->delete())
                 return redirect(route('vehicules.display'))->with([
@@ -128,5 +132,24 @@ class VehiculeController extends Controller
                 'status' => 'failed'
             ]);   
         }
+    }
+
+    public function details($id) {
+        if($this->test_connection()) return $this->test_connection();
+        $vehicule = Vehicule::find($id);
+
+        $query = CarteSIm::query();
+        $card = $query->where('carte_sim.vehicule_id', $vehicule->vehicule_id)
+                    ->first();
+
+        $query = Client::query();
+        $client = $query->where('clients.client_id', $card->client_id)
+                        ->first();
+
+        return view('vehicules', [
+            'card' => $card,
+            'client', $client,
+            'matricule' => $vehicule->matriculation
+        ]);  
     }
 }

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\CarteSIm;
 use App\Models\Client;
+use App\Models\RechargeSim;
 use App\Models\Utilisateur;
 use App\Models\UtilisateurPrincipale;
 use App\Models\Vehicule;
@@ -22,12 +23,14 @@ class SimController extends Controller
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+        return null;
     }
 
     // Controller
     public function createSim(Request $request) {
-        $this->test_connection();
-
+        if($this->test_connection()) {
+            return $this->test_connection();
+        }
         $validated = $request->validate([
             'ice' => 'required|string|regex:/^[0-9]+$/',
             'num_carte_sim' => 'required|string|regex:/^[0-9]+$/',
@@ -94,7 +97,9 @@ class SimController extends Controller
    
 
     public function displayCartes(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) {
+            return $this->test_connection();
+        }
         if ($request->filled('search')) {
             $request->validate([
                 'search' => 'regex:/^[0-9]+$/'
@@ -145,7 +150,9 @@ class SimController extends Controller
     }
 
     public function updateCarte(Request $request, $id) {
-        $this->test_connection();
+        if($this->test_connection()) {
+            return $this->test_connection();
+        }
         $carteSIm = CarteSIm::find($id);
         
         if($carteSIm) {
@@ -190,7 +197,9 @@ class SimController extends Controller
     }
 
     public function destroyCarte($id) {
-        $this->test_connection();
+        if($this->test_connection()) {
+            return $this->test_connection();        
+        }
         $carteSIm = CarteSIm::find($id);
 
         if($carteSIm->delete()) {
@@ -204,5 +213,23 @@ class SimController extends Controller
                 'delete'=> true
             ]);
         }
+    }
+
+
+    public function details($id) {
+        if($this->test_connection()) return $this->test_connection();
+        $carte = CarteSIm::find($id);
+        $num_carte = $carte->num_carte_sim;
+
+        $query = RechargeSim::query();
+        $recharges = $query->where('carte_sim_id', $id)->get();
+        $num =$recharges->count();
+
+        return view('admin.blrDet', [
+            'numero' => $num_carte,
+            'count' => $num,
+            'recharges' => $recharges,
+            'x' => true
+        ]);
     }
 }

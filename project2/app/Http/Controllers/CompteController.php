@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Mail\CreationMail;
 use App\Mail\UpdateAccMail;
 use App\Models\Admin;
+use App\Models\CarteSIm;
+use App\Models\CarteSImBlr;
 use App\Models\Utilisateur;
 use App\Models\UtilisateurPrincipale;
 use Illuminate\Database\QueryException;
@@ -22,12 +24,18 @@ class CompteController extends Controller
                             Admin::where('email', $email)->exists();
     }
 
-    public function create(Request $request) {
+    public function test_connection() {
         if(!auth()->guard('admin')->check())
             return redirect(route('auth.login'));
         
         if(session()->has('guard'))
             Auth::shouldUse(session('guard'));
+        return null;
+    }
+
+    public function create(Request $request) {
+        
+        if($this->test_connection()) return $this->test_connection();
 
         $admin = Admin::find(auth()->guard('admin')->id());
         $validated = $request->validate([
@@ -89,6 +97,7 @@ class CompteController extends Controller
     }
 
     public function show(Request $request) {
+        if($this->test_connection()) return $this->test_connection();
         $search = $request->input('search');
 
         $query = UtilisateurPrincipale::query();
@@ -111,17 +120,13 @@ class CompteController extends Controller
     }
 
     public function edit(Request $request, $id) {
-        if(!auth()->guard('admin')->check())
-            return redirect(route('auth.login'));
-        
-        if(session()->has('guard'))
-            Auth::shouldUse(session('guard'));
+        if($this->test_connection()) return $this->test_connection();
 
         $validated = $request->validate([
             'nom' => 'string|required',
             'prenom' => 'string|required',
             'email' => 'required|email',
-            'password'=> 'min:8|confirmed',
+            'password'=> 'nullable|min:8|confirmed',
         ],[
             'nom.required' => 'Le nom est requis.',
             
@@ -194,6 +199,7 @@ class CompteController extends Controller
     }
 
     public function delete($id) {
+        if($this->test_connection()) return $this->test_connection();
         $compte = UtilisateurPrincipale::find($id);
         try {
             if($compte->delete()) 
@@ -207,5 +213,42 @@ class CompteController extends Controller
                 'status' => 'error'
             ]);
         }
+    }
+
+
+    public function account_details($id) {
+        if($this->test_connection()) return $this->test_connection();
+
+        $compte = UtilisateurPrincipale::find($id);
+
+        $query = Utilisateur::query();
+
+        $users = $query->where('utilisateurs.user_principale_id', $compte->user_principale_id)
+                        ->get();
+        $usersNumber = $users->count();
+
+        $query = CarteSIm::query();
+        $cartes = $query->where('carte_sim.user_principale_id', $compte->user_principale_id)
+                        ->orWhereIn('carte_sim.user_id', function ($subQ) use ($compte) {
+                            $subQ->select('user_id')
+                                ->from('utilisateurs')
+                                ->where('user_principale_id', $compte->user_principale_id);
+                        })->get();
+        $cartesNumber = $cartes->count();
+
+        $query = CarteSImBlr::query();
+        $cartesBlr = $query->where('carte_sim_blr.liee_par', $compte->user_principale_id)
+                        ->get();
+        $cartesBlrNumber = $cartes->count();
+
+        return view('admin.details', [
+            'compte' => $compte,
+            'usersNumber' => $usersNumber,
+            'users' => $users,
+            'cartesNumber' => $cartesNumber,
+            'cartesSim' => $cartes,
+            'cartesBlrNumber' => $cartesBlrNumber,
+            'cartesBlr' => $cartesBlr
+        ]);
     }
 }

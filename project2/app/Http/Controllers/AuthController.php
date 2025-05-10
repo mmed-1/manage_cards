@@ -22,6 +22,7 @@ class AuthController extends Controller
         auth()->guard('admin')->logout();
         auth()->guard('user')->logout();
         auth()->guard('user_principale')->logout();
+        
         session()->invalidate();
         session()->regenerateToken();
 
@@ -33,7 +34,7 @@ class AuthController extends Controller
                 'guard' => 'admin'
             ]);
 
-            return redirect(route('admin.home'));
+            return redirect(route('admin.dashboard'));
         } elseif (Auth::guard('user_principale')->attempt($validated)) {
             $user_pri = Auth::guard('user_principale')->user();
 
@@ -77,7 +78,20 @@ class AuthController extends Controller
         }
     }
 
-    public function reset(Request $request) {
+    public function logout(Request $request) {
+        //test who is connected
+        if(auth()->guard('admin')->check())
+            auth()->guard('admin')->logout();
+        elseif(auth()->guard('user_principale')->check())
+            auth()->guard('user_principale')->logout();
+        elseif(auth()->guard('user')->check())
+            auth()->guard('user')->logout();
+        else
+            return redirect(route('auth.login'));
         
+        session()->invalidate();
+        session()->regenerateToken();
+
+        return redirect(route('auth.login'));
     }
 }

@@ -21,10 +21,11 @@ class ClientController extends Controller
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+        return null;
     }
 
     public function create(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $validated = $request->validate([
             "nom"=> "string|required",
             "prenom" => "string|required",
@@ -66,8 +67,8 @@ class ClientController extends Controller
         }
     }
 
-    public function show(Request $request): View {
-        $this->test_connection();
+    public function show(Request $request) {
+        if($this->test_connection()) return $this->test_connection();
 
         $user = UtilisateurPrincipale::find(auth::guard('user_principale')->id()) ?? 
                                                     Utilisateur::find(auth::guard('user')->id());
@@ -118,7 +119,7 @@ class ClientController extends Controller
     }
 
     public function update(Request $request, $id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         if($request->input('reset') === 'Annuler')
             return redirect(route('display.clients'));
 
@@ -160,7 +161,7 @@ class ClientController extends Controller
     }
 
     public function delete($id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $client = Client::find($id);
         if($client->delete()) {
             return redirect()->back()->with([
@@ -175,7 +176,7 @@ class ClientController extends Controller
     }
 
     public function detaille($id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $client = Client::find($id);
         
         $cartes = $client->carte_sim;

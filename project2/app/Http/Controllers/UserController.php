@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Mail\CreationMail;
 use App\Mail\UpdateAccMail;
 use App\Models\Admin;
+use App\Models\CarteSIm;
+use App\Models\CarteSImBlr;
+use App\Models\RechargeBlr;
+use App\Models\RechargeSim;
 use App\Models\Utilisateur;
 use App\Models\UtilisateurPrincipale;
 use Illuminate\Database\QueryException;
@@ -21,6 +25,7 @@ class UserController extends Controller
 
         if(session()->has('guard'))
             Auth::shouldUse(session('guard'));
+        return null;
     }
 
     public function testUnicite($email): bool {
@@ -29,7 +34,7 @@ class UserController extends Controller
     }
 
     public function save(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
 
         $user = UtilisateurPrincipale::find(auth()->guard('user_principale')->id());
 
@@ -92,7 +97,7 @@ class UserController extends Controller
     }
 
     public function show(Request $request) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         
         $user = UtilisateurPrincipale::find(auth()->guard('user_principale')->id());
 
@@ -137,7 +142,7 @@ class UserController extends Controller
     }
 
     public function update(Request $request, $id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
 
         $validated = $request->validate([
             'nom' => 'string|required',
@@ -213,5 +218,44 @@ class UserController extends Controller
                 'status'=> 'failed'
             ]);
         }
+    }
+
+    public function details($id) {
+        $user = Utilisateur::find($id);
+
+        $query = CarteSIm::query();
+
+        //carte sim ajouter par ce utilisateurs
+        $sims = $query->where('carte_sim.user_id', $user->user_id)->get();
+        $num1 = $sims->count();
+
+        //carte sim blr par ce user
+        $query = CarteSImBlr::query();
+        $blrs = $query->where('carte_sim_blr.user_id', $user->user_id)->get();
+        $num2 = $blrs->count();
+
+        //recharges sim blrs 
+        $query = RechargeSim::query();
+        $sim_recharges = $query->where('recharge_sim.user_id', $user->user_id)->get();
+        $num3 = $sim_recharges->count();
+        
+        //recharges blr par ce user
+        $query = RechargeBlr::query();
+        $blr_recharges = $query->where('recharge_carte_blr.user_id', $user->user_id)->get();
+        $num4 = $blr_recharges->count();
+
+        $data = [
+            'cartesSim' => $sims,
+            'cartesBlr' => $blrs,
+            'countSim' => $num1,
+            'countBlr' => $num2,
+            'rechargesSim' => $sim_recharges,
+            'rechargesBlr' => $blr_recharges,
+            'blrNums' => $num4,
+            'simNums' => $num3,
+            'name' => $user->prenom . ' ' . $user->nom
+        ];
+
+        return view('pages.usersDet', ['data' => $data]);
     }
 }

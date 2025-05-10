@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Admin;
+use App\Models\CarteSImBlr;
 use App\Models\Equipement;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
@@ -18,16 +19,19 @@ class EquipementController extends Controller
         if (session()->has('guard')) {
             Auth::shouldUse(session('guard'));
         }
+        return null;
     }
 
     public function create(Request $request) {
-        $this->test_connection();        
+        if($this->test_connection()) return $this->test_connection();     
 
         $validated = $request->validate([
             'ip_address' => 'string|required|ip',
-            'nombre_port' => 'string|required|regex:/^[0-9]+$/'
+            'nombre_port' => 'string|required|regex:/^[0-9]+$/',
+            'name' => 'required'
         ],[
-            'ipAddress.ip' => 'Le champ adresse IP doit contenir une adresse IP valide (exemple : 192.168.1.1)',
+            'name.required' => 'le nom d\'équipement est champ obligatoire',
+            'ip_address.ip' => 'Le champ adresse IP doit contenir une adresse IP valide (exemple : 192.168.1.1)',
             'nbPorts.regex' => 'Le champ nombre de ports doit contenir uniquement des chiffres.',
             'ipAddress.required' => 'Adresse ip est un champ obligatoire',
             'nbPorts.required' => 'Nombre de ports est un champ obligatoire'
@@ -58,8 +62,8 @@ class EquipementController extends Controller
     }
 
     public function displayEquipements() {
-        $this->test_connection();
-        $equipements = Equipement::simplePaginate(5); //! maybe here also
+        if($this->test_connection()) return $this->test_connection();
+        $equipements = Equipement::get(); //! maybe here also
         return view('details.equipementDet', ['equipements' => $equipements]);
     }
 
@@ -69,11 +73,13 @@ class EquipementController extends Controller
     }
 
     public function update(Request $request, $id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $validated = $request->validate([
+            'name' => 'required',
             'ipAddress' => 'string|required|ip',
             'nbPorts' => 'string|required|regex:/^[0-9]+$/'
         ],[
+            'name.required' => 'nom d\'équipement est un champ obligatoire',
             'ipAddress.ip' => 'Le champ adresse IP doit contenir une adresse IP valide (exemple : 192.168.1.1)',
             'nbPorts.regex' => 'Le champ nombre de ports doit contenir uniquement des chiffres.',
             'ipAddress.required' => 'Adresse ip est un champ obligatoire',
@@ -82,6 +88,7 @@ class EquipementController extends Controller
 
         $equipement = Equipement::find($id);
 
+        $equipement->name = $validated['name'];
         $equipement->ip_address = $validated['ipAddress'];
         $equipement->nombre_port = $validated['nbPorts'];
 
@@ -108,7 +115,7 @@ class EquipementController extends Controller
     }
 
     public function destroy($id) {
-        $this->test_connection();
+        if($this->test_connection()) return $this->test_connection();
         $equipement = Equipement::find($id);
         if($equipement->delete()) {
             return redirect()->back()->with([
@@ -121,5 +128,22 @@ class EquipementController extends Controller
                 'deleted' => true
             ]);
         }
+    }
+
+    public function deteils($id) {
+        if($this->test_connection()) return $this->test_connection();
+        $equipement = Equipement::find($id);
+
+        $query = CarteSImBlr::query();
+
+        $cartes = $query->where('carte_sim_blr.equipement_id', $equipement->equipement_id)
+                        ->get();
+        $numbers = $cartes->count();
+
+        return view('admin.equipement', [
+            'equipement' => $equipement,
+            'numbers' => $numbers,
+            'cartes' => $cartes
+        ]);
     }
 }
