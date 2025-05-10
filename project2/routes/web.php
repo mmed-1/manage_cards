@@ -1,11 +1,13 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CarteBlrController;
 use App\Http\Controllers\ClientController;
 use App\Http\Controllers\CompteController;
 use App\Http\Controllers\EquipementController;
 use App\Http\Controllers\SimController;
+use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VehiculeController;
 use Illuminate\Contracts\View\View;
@@ -25,16 +27,31 @@ Route::get('/password/reset',function () {
 })->name('password.reset');
 
 
-
+Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
 
 
 
 Route::prefix('/admin')->group(function () {
+
+    Route::get('/admin/profile-info', [AdminController::class, 'info'])
+        ->name('admin.info');
+
+    Route::post('/admin/update/info', [AdminController::class,'update_admin'])
+        ->name('admin.info2');
+
+
+    Route::get('/gestion/ajout/blr', [CarteBlrController::class,'index'])
+        ->name('admin-blr.add');
+
+    Route::post('/gestion/blr/add', [CarteBlrController::class, 'create'])
+        ->name('admin-blr.ajout');
+
+    Route::get('/dashboard', [StatisticController::class, 'index'])
+        ->name('admin.dashboard');
+
     Route::view('/home', 'admin.home')
         ->name('admin.home');
 
-    Route::view('/gestion/equipement', 'admin.choice')
-        ->name('admin.choice');
 
     Route::get('/ajout/equipement', function () {
         return view('admin.ajout_equi');
@@ -54,10 +71,6 @@ Route::prefix('/admin')->group(function () {
 
     Route::delete('/equipement/delete/{id}', [EquipementController::class,'destroy'])
         ->name('deleteEqui');
-    
-    Route::get('/gestion-comptes', function () {
-        return view('admin.choice2');
-    })->name('admin.choice2');
 
     Route::view('/gestion-comptes/ajout', 'admin.ajout_compte')
         ->name('admin.addAcc');
@@ -85,6 +98,27 @@ Route::prefix('/admin')->group(function () {
 
     Route::match(['get', 'post'],'/gestion/carte/blr/search', [CarteBlrController::class, 'display_admin'])
         ->name('blr.search2');
+
+    Route::get('/gestion/comptes/{id}/detaille', [CompteController::class, 'account_details'])
+        ->name('account.det');
+
+    Route::get('/equipement/{id}/detaills', [EquipementController::class, 'deteils'])
+        ->name('eq.det');
+
+    Route::get('/carte/blr/{id}/detaille', [CarteBlrController::class, 'details'])
+        ->name('blr.det');
+
+    Route::get('/carte/blr/{id}/modifier', [CarteBlrController::class, 'find'])
+        ->name('blr.fd');
+
+    Route::post('/carte/blr/{id}/modifier', [CarteBlrController::class, 'update_admin'])
+        ->name('blr.upd');
+
+    Route::get('/gestion/carte/blr/all', [CarteBlrController::class, 'show'])
+        ->name('details.blr');
+
+    Route::post('/gestion/carte/blr/recherche', [CarteBlrController::class, 'show'])
+        ->name('blr.search');
 });
 
 
@@ -143,12 +177,6 @@ Route::prefix('/gestion')->group(function () {
 
     Route::get('/client/detaille/{id}', [ClientController::class, 'detaille'])
         ->name('client.detaille');
-
-    Route::get('/carte/blr', [CarteBlrController::class, 'index'])
-        ->name('blr.ajout');
-
-    Route::post('/carte/blr/ajout', [CarteBlrController::class,'create'])
-        ->name('blr.add');
     
     Route::view('/utilisateurs', 'user_principale.choice')
         ->name('compte.choice');
@@ -198,12 +226,6 @@ Route::prefix('/gestion')->group(function () {
     Route::delete('/vehicules/delete/{id}/vehicule', [VehiculeController::class, 'destroy'])
         ->name('vehicule.delete');
 
-    Route::get('/carte/blr/all', [CarteBlrController::class, 'show'])
-        ->name('details.blr');
-
-    Route::post('/carte/blr/recherche', [CarteBlrController::class, 'show'])
-        ->name('blr.search');
-
     Route::get('/carte/blr/{id}', [CarteBlrController::class, 'found'])
         ->name('blr.found');
 
@@ -212,4 +234,25 @@ Route::prefix('/gestion')->group(function () {
 
     Route::post('/carte/blr/{id}/update', [CarteBlrController::class, 'update'])
         ->name('blr.update');
+
+    Route::get('/carte/blr/{id}/detaille', [CarteBlrController::class, 'details'])
+        ->name('gest.det');
+
+    Route::get('/carte/sim/{id}/detaille', [SimController::class, 'details'])
+        ->name('sim.det');
+
+    Route::get('/utilisateur/{id}/detaille', [UserController::class, 'details'])
+        ->name('user.det');
+    
+    Route::get('/vehicule/{id}/detaille', [VehiculeController::class, 'details'])
+        ->name('ve.det');
+});
+
+
+
+
+
+
+Route::fallback(function () {
+    return view('notFound'); // or return redirect('/'); or a custom message
 });
