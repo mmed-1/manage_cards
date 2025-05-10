@@ -108,7 +108,7 @@
                                             </div>
                                             <div class="status-content">
                                                 <h3>Succès!</h3>
-                                                <p>Le compte a été créé avec succès. <br> Un email a été envoyé</p>
+                                                <p>Le compte a été modifié avec succès.</p>
                                             </div>
                                         </div>
                                         @break
@@ -148,31 +148,31 @@
                             @endif
                         </div>
 
-                        <form action="{{ route('compte.add' )}}" method="post" class="form">
+                        <form action="{{ route('admin.info2') }}" method="post" class="form">
                             @csrf
                             <div class="form-row">
                                 <div class="form-group">
-                                    <label for="nom" class="form-label">Nom</label>
+                                    <label for="nom" class="form-label">Votre nom</label>
                                     <div class="input-group">
                                         <span class="input-icon"><i class="fas fa-user"></i></span>
-                                        <input type="text" class="form-control" id="nom" name="nom" required>
+                                        <input type="text" class="form-control" id="nom" name="nom" required value="{{ $admin->nom }}">
                                     </div>
                                 </div>
 
                                 <div class="form-group">
-                                    <label for="prenom" class="form-label">Prénom</label>
+                                    <label for="prenom" class="form-label">Votre prénom</label>
                                     <div class="input-group">
                                         <span class="input-icon"><i class="fas fa-user"></i></span>
-                                        <input type="text" class="form-control" id="prenom" name="prenom" required />
+                                        <input type="text" class="form-control" id="prenom" name="prenom" required value="{{ $admin->prenom }}"/>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="form-group">
-                                <label for="email" class="form-label">Email</label>
+                                <label for="email" class="form-label">Votre email</label>
                                 <div class="input-group">
                                     <span class="input-icon"><i class="fas fa-envelope"></i></span>
-                                    <input type="email" class="form-control" id="email" name="email" required />
+                                    <input type="email" class="form-control" id="email" name="email" required value="{{ $admin->email }}"/>
                                 </div>
                             </div>
 
@@ -181,7 +181,7 @@
                                     <label for="password" class="form-label">Mot de passe</label>
                                     <div class="input-group">
                                         <span class="input-icon"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="password" name="password" required />
+                                        <input type="password" class="form-control" id="password" name="password"  />
                                         <button type="button" class="password-toggle" data-target="password">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -192,7 +192,7 @@
                                     <label for="password2" class="form-label">Confirmer mot de passe</label>
                                     <div class="input-group">
                                         <span class="input-icon"><i class="fas fa-lock"></i></span>
-                                        <input type="password" class="form-control" id="password2" name="password_confirmation" required />
+                                        <input type="password" class="form-control" id="password2" name="password_confirmation" />
                                         <button type="button" class="password-toggle" data-target="password2">
                                             <i class="fas fa-eye"></i>
                                         </button>
@@ -202,9 +202,9 @@
 
                             <div class="form-actions">
                                 <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-user-plus"></i> Ajouter compte
+                                    <i class="fas fa-save"></i> Modifier les Informations
                                 </button>
-                                <button type="reset" class="btn btn-secondary">
+                                <button type="submit" class="btn btn-secondary" name="reset" value="reset">
                                     <i class="fas fa-undo"></i> Annuler
                                 </button>
                             </div>
@@ -246,7 +246,7 @@
         <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="{{ asset('js/add-account.js') }}"></script>
-    {{-- <script src="{{ asset('js/comptes.js') }}"></script> --}}
+    <script src="{{ asset('js/dashboard.js') }}"></script>
+    <script src="{{ asset('js/comptes.js') }}"></script>
 </body>
 </html>

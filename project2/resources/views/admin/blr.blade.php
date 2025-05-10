@@ -19,7 +19,21 @@
             />
             <button type="submit">🔎</button>
         </form>
-
+        @if (session('update'))
+            @if (session('status') == 'success')
+                <div>
+                    <span style="color: green;">
+                        Le port est bien modifie
+                    </span>
+                </div>
+            @else
+                <div>
+                    <span style="color: red;">
+                        Il y a un problem
+                    </span>
+                </div>
+            @endif
+        @endif
         <table>
             <thead>
                 <tr>
@@ -46,12 +60,12 @@
                         @endphp
                         <td>{{ $compte }}</td>
                         <td>
-                            <a href="">modifier</a>
-                            <a href="">detaille</a>
-                            <form action="" method="post" style="display: inline;">
+                            <a href="{{ route('blr.fd', ['id' => $carte->carte_blr_id]) }}">modifier</a>
+                            <a href="{{ route('blr.det', ['id' => $carte->carte_blr_id]) }}">detaille</a>
+                            {{-- <form action="" method="post" style="display: inline;">
                                 @csrf
                                 <button type="submit" onclick="return confirm('Tu veux supprimer cette carte')">supprimer</button>
-                            </form>
+                            </form> --}}
                         </td>
                     </tr>
                 @empty

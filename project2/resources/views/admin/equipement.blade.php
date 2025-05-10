@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<x-head title="Modifier votre equipement">
-    <link rel="stylesheet" href="{{ asset('css/equi-update.css') }}">
+<x-head title="Détails sur l'équipement">
+    <link rel="stylesheet" href="{{ asset('css/equi-view.css') }}">
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </x-head>
@@ -20,7 +20,7 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li>
+                    <li class="active">
                         <a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i> Accueil</a>
                     </li>
                     <li class="has-submenu">
@@ -68,8 +68,8 @@
                     <i class="fas fa-bars"></i>
                 </div>
                 <div class="page-title">
-                    <h1>Modifier votre equipement</h1>
-                    <p>Mettre à jour les informations de l'équipement</p>
+                    <h1>Détails sur l'équipement {{ $equipement->name }}</h1>
+                    <p>Informations détaillées et cartes associées</p>
                 </div>
                 <div class="top-actions">
                     <button id="userMenuToggle" class="user-menu-toggle">
@@ -80,67 +80,50 @@
 
             <!-- Page Content -->
             <div class="page-content">
-                <div class="card form-card">
+                <div class="card">
                     <div class="card-header">
-                        <h2><i class="fas fa-edit"></i> Modifier l'équipement</h2>
+                        <h2><i class="fas fa-info-circle"></i> Informations sur l'équipement</h2>
                     </div>
                     
                     <div class="card-body">
-                        <!-- Status Messages -->
-                        <div id="status-container">
-                            @if ($errors->any())
-                                <div class="status-message error animate-in">
-                                    <div class="status-icon">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    </div>
-                                    <div class="status-content">
-                                        <h3>Erreur</h3>
-                                        <ul class="error-list">
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
+                        <div class="equipment-info">
+                            @if ($numbers != 0)
+                                <div class="info-badge">
+                                    <i class="fas fa-microchip"></i>
+                                    <span>Cet équipement possède {{ $numbers }} carte{{ $numbers > 1 ? 's' : '' }}.</span>
                                 </div>
                             @endif
                         </div>
 
-                        <form action="{{ route('updateEquipement', ['id' => $equipement->equipement_id]) }}" method="post" class="form">
-                            @csrf
-                            
-                            <div class="form-group">
-                                <label for="l0" class="form-label">nom d'équipement</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l0" name="name" autofocus value="{{ $equipement->name }}" required />
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="l1" class="form-label">adresse IP</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l1" name="ipAddress" value="{{ $equipement->ip_address }}" required />
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="l2" class="form-label">nombre de ports</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-plug"></i></span>
-                                    <input type="number" class="form-control" id="l2" name="nbPorts" value="{{ $equipement->nombre_port }}" required min="1" />
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Modifier l'équipement
-                                </button>
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-undo"></i> Annuler
-                                </button>
-                            </div>
-                        </form>
+                        <div class="table-responsive">
+                            <table class="data-table" id="cardsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Numéro de port <i class="fas fa-sort"></i></th>
+                                        <th>Numéro de carte <i class="fas fa-sort"></i></th>
+                                        <th>Opérateur <i class="fas fa-sort"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($cartes as $carte)
+                                        <tr>
+                                            <td>{{ $carte->num_port }}</td>
+                                            <td>{{ $carte->num_carte }}</td>
+                                            <td>{{ $carte->operateur }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr class="empty-row">
+                                            <td colspan="3">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-microchip"></i>
+                                                    <p>Aucune carte n'est installée sur cet équipement.</p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,8 +160,7 @@
         <!-- Overlay for mobile and sidebar backdrop -->
         <div class="overlay" id="overlay"></div>
     </div>
-
-    <script src="{{ asset('js/equi-update.js') }}"></script>
-    <script src="{{ asset('js/equi-view.js') }}"></script>
+    
+    <script src="{{ asset('js/dashboard.js')}}"></script>
 </body>
 </html>

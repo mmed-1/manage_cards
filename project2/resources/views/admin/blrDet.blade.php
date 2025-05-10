@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<x-head title="Modifier votre equipement">
-    <link rel="stylesheet" href="{{ asset('css/equi-update.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
+<x-head title="Détails de la Carte BLR">
+    <link rel="stylesheet" href="{{ asset('css/blr-details.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </x-head>
 <body>
@@ -45,7 +44,7 @@
                             <li><a href="{{ route('consultation') }}"><i class="fas fa-list"></i> Consulter Equipement</a></li>
                         </ul>
                     </li>
-                    <li class="has-submenu">
+                    <li class="has-submenu active">
                         <div class="submenu-toggle">
                             <i class="fas fa-sim-card"></i> 
                             <span>Cartes BLR</span>
@@ -53,7 +52,7 @@
                         </div>
                         <ul class="submenu">
                             <li><a href="{{ route('admin-blr.add') }}"><i class="fas fa-plus-circle"></i> Ajout SIM BLR</a></li>
-                            <li><a href="{{ route('details.blr') }}"><i class="fas fa-list"></i> Consulter Cartes BLR</a></li>
+                            <li class="active"><a href="{{ route('details.blr') }}"><i class="fas fa-list"></i> Consulter Cartes BLR</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -68,8 +67,8 @@
                     <i class="fas fa-bars"></i>
                 </div>
                 <div class="page-title">
-                    <h1>Modifier votre equipement</h1>
-                    <p>Mettre à jour les informations de l'équipement</p>
+                    <h1>Détails de la Carte BLR</h1>
+                    <p>Numéro de carte: {{ $numero }}</p>
                 </div>
                 <div class="top-actions">
                     <button id="userMenuToggle" class="user-menu-toggle">
@@ -80,70 +79,68 @@
 
             <!-- Page Content -->
             <div class="page-content">
-                <div class="card form-card">
+                <!-- Recharges Card -->
+                <div class="card" id="rechargesCard">
                     <div class="card-header">
-                        <h2><i class="fas fa-edit"></i> Modifier l'équipement</h2>
+                        <h2><i class="fas fa-history"></i> Historique des Recharges</h2>
+                        @if ($count != 0)
+                            <span class="badge">{{ $count }}</span>
+                        @endif
                     </div>
                     
                     <div class="card-body">
-                        <!-- Status Messages -->
-                        <div id="status-container">
-                            @if ($errors->any())
-                                <div class="status-message error animate-in">
-                                    <div class="status-icon">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    </div>
-                                    <div class="status-content">
-                                        <h3>Erreur</h3>
-                                        <ul class="error-list">
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            @endif
+                        @if ($count != 0)
+                            <div class="search-container">
+                                <input type="text" class="search-input" id="searchRecharges" placeholder="Rechercher une recharge...">
+                                <i class="fas fa-search search-icon"></i>
+                            </div>
+                        @endif
+                        
+                        <div class="table-container">
+                            <table id="rechargesTable">
+                                <thead>
+                                    <tr>
+                                        <th data-sort="date">Date de recharge <i class="fas fa-sort"></i></th>
+                                        <th data-sort="montant">Montant <i class="fas fa-sort"></i></th>
+                                        <th data-sort="user">Rechargée par <i class="fas fa-sort"></i></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($recharges as $recharge)
+                                        <tr>
+                                            <td>{{ $recharge->date_recharge }}</td>
+                                            <td>{{ $recharge->montant }}</td>
+                                            @php
+                                                if($recharge->user_principale_id) {
+                                                    if(session('guard') != 'admin') {
+                                                        if(auth()->guard('user_principale')->id() == $recharge->user_principale_id)
+                                                            $name = 'Vous';
+                                                        else
+                                                            $name = $recharge->utlisater_principale->prenom . ' ' . $recharge->utlisater_principale->nom;
+                                                    }
+                                                } elseif($recharge->user_id) {
+                                                    if(session('guard') != 'admin') {
+                                                        if(auth()->guard('user')->id() == $recharge->user_id)
+                                                            $name = 'Vous';
+                                                        else
+                                                            $name = $recharge->utilisateur->prenom . ' ' . $recharge->utilisateur->nom;
+                                                    }
+                                                } else $name = ' ';
+                                            @endphp
+                                            <td>{{ $name }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="3" class="empty-message">
+                                                <i class="fas fa-info-circle"></i> Aucune recharge effectuée pour le moment.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
-
-                        <form action="{{ route('updateEquipement', ['id' => $equipement->equipement_id]) }}" method="post" class="form">
-                            @csrf
-                            
-                            <div class="form-group">
-                                <label for="l0" class="form-label">nom d'équipement</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l0" name="name" autofocus value="{{ $equipement->name }}" required />
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="l1" class="form-label">adresse IP</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l1" name="ipAddress" value="{{ $equipement->ip_address }}" required />
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="l2" class="form-label">nombre de ports</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-plug"></i></span>
-                                    <input type="number" class="form-control" id="l2" name="nbPorts" value="{{ $equipement->nombre_port }}" required min="1" />
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Modifier l'équipement
-                                </button>
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-undo"></i> Annuler
-                                </button>
-                            </div>
-                        </form>
                     </div>
                 </div>
-            </div>
         </main>
 
         <!-- Right Sidebar (User Menu) -->
@@ -178,7 +175,7 @@
         <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="{{ asset('js/equi-update.js') }}"></script>
-    <script src="{{ asset('js/equi-view.js') }}"></script>
+    <script src="{{ asset('js/blr-details.js') }}"></script>
+    {{-- <script src="{{ asset('js/blr-det.js') }}"></script> --}}
 </body>
 </html>

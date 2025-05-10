@@ -69,7 +69,7 @@
                     <td>{{ $user->email }}</td>
                     <td>
                         <a href="{{ route('update.user1', ['id' => $user->user_id]) }}">modifier</a>
-                        <a href="">detaille</a>
+                        <a href="{{ route('user.det' , ['id' => $user->user_id]) }}">detaille</a>
                         <form action="{{ route('user.delete', ['id' => $user->user_id]) }}" method="post"
                             style="display:inline;">
                             @csrf

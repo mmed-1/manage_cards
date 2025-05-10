@@ -5,7 +5,7 @@
 </x-head>
 <body>
     <header>
-        <h1>Consulter les cartes</h1>
+        <h1>Consulter les cartes SIM</h1>
         <a href="{{route('choice')}}">Retour</a>
     </header>
     <main>
@@ -81,13 +81,13 @@
                         
                             <td>{{ $name }}</td>
                             <td>
-                                <a href="{{route('edit', ['id' => $carte->carte_sim_id])}}">✏️</a>
-
+                                <a href="{{ route('edit', ['id' => $carte->carte_sim_id]) }}">mofifier</a>
+                                <a href="{{ route('sim.det', ['id' => $carte->carte_sim_id]) }}">detaille</a>
                                 <form action="{{ route('delete', ['id' => $carte->carte_sim_id]) }}" method="post" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Delete this carte?')">
-                                        🗑️
+                                        supprimer
                                     </button>
                                 </form>
                         </td>

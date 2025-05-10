@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
-<x-head title="Modifier votre equipement">
-    <link rel="stylesheet" href="{{ asset('css/equi-update.css') }}">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
     <link rel="stylesheet" href="{{ asset('css/dashboard.css') }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-</x-head>
+</head>
 <body>
     <div class="app-container">
         <!-- Left Sidebar -->
@@ -20,7 +22,7 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li>
+                    <li class="active">
                         <a href="{{ route('admin.dashboard') }}"><i class="fas fa-home"></i> Accueil</a>
                     </li>
                     <li class="has-submenu">
@@ -68,8 +70,8 @@
                     <i class="fas fa-bars"></i>
                 </div>
                 <div class="page-title">
-                    <h1>Modifier votre equipement</h1>
-                    <p>Mettre à jour les informations de l'équipement</p>
+                    <h1>Tableau de Bord</h1>
+                    <p>Bienvenue dans votre panneau d'administration</p>
                 </div>
                 <div class="top-actions">
                     <button id="userMenuToggle" class="user-menu-toggle">
@@ -78,75 +80,82 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <div class="page-content">
-                <div class="card form-card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-edit"></i> Modifier l'équipement</h2>
+            <!-- Stats Cards -->
+            <div class="stats-container">
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Comptes</h3>
+                        <div class="stat-value">{{ $data['countAcc'] }}</div>
+                        <div class="stat-trend positive">nombre de comptes</div>
                     </div>
-                    
-                    <div class="card-body">
-                        <!-- Status Messages -->
-                        <div id="status-container">
-                            @if ($errors->any())
-                                <div class="status-message error animate-in">
-                                    <div class="status-icon">
-                                        <i class="fas fa-exclamation-circle"></i>
-                                    </div>
-                                    <div class="status-content">
-                                        <h3>Erreur</h3>
-                                        <ul class="error-list">
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
-                                    </div>
-                                </div>
-                            @endif
-                        </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
 
-                        <form action="{{ route('updateEquipement', ['id' => $equipement->equipement_id]) }}" method="post" class="form">
-                            @csrf
-                            
-                            <div class="form-group">
-                                <label for="l0" class="form-label">nom d'équipement</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l0" name="name" autofocus value="{{ $equipement->name }}" required />
-                                </div>
-                            </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>Véhicules</h3>
+                        <div class="stat-value">{{ $data['countVehi'] }}</div>
+                        <div class="stat-trend positive">nombre de véhicules</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                </div>
 
-                            <div class="form-group">
-                                <label for="l1" class="form-label">adresse IP</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-network-wired"></i></span>
-                                    <input type="text" class="form-control" id="l1" name="ipAddress" value="{{ $equipement->ip_address }}" required />
-                                </div>
-                            </div>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>SIMs</h3>
+                        <div class="stat-value">{{ $data['countSim'] }}</div>
+                        <div class="stat-trend positive">nombre de carte SIMs</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-sim-card"></i>
+                    </div>
+                </div>
 
-                            <div class="form-group">
-                                <label for="l2" class="form-label">nombre de ports</label>
-                                <div class="input-group">
-                                    <span class="input-icon"><i class="fas fa-plug"></i></span>
-                                    <input type="number" class="form-control" id="l2" name="nbPorts" value="{{ $equipement->nombre_port }}" required min="1" />
-                                </div>
-                            </div>
-
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Modifier l'équipement
-                                </button>
-                                <button type="reset" class="btn btn-secondary">
-                                    <i class="fas fa-undo"></i> Annuler
-                                </button>
-                            </div>
-                        </form>
+                <div class="stat-card">
+                    <div class="stat-info">
+                        <h3>BLRs</h3>
+                        <div class="stat-value">{{ $data['numOfBlr'] }}</div>
+                        <div class="stat-trend positive">nombre de cartes BLRs</div>
+                    </div>
+                    <div class="stat-icon">
+                        <i class="fas fa-network-wired"></i>
                     </div>
                 </div>
             </div>
+
+            <!-- Equipment Cards Section -->
+            <section class="equipment-section">
+                <div class="section-header">
+                    @if (!$data['ports']->isEmpty())
+                        <h2>Équipements et Cartes</h2>
+                    @endif
+                </div>
+                <div class="equipment-cards">
+                    @foreach($data['ports'] as $port)
+                    <div class="equipment-card">
+                        <div class="equipment-header">
+                            <h3>{{ $port->name }}</h3>
+                            <div class="equipment-icon">
+                                <i class="fas fa-server"></i>
+                            </div>
+                        </div>
+                        <div class="equipment-stats">
+                            <div class="card-count">
+                                <span class="count-value">{{ $port->total_cards }}/{{$port->nombre_port}}</span>
+                                <span class="count-label">Cartes</span>
+                            </div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+            </section>
         </main>
 
-        <!-- Right Sidebar (User Menu) -->
+        <!-- Right Sidebar (User Menu) - Simplified as requested -->
         <aside class="user-sidebar" id="userSidebar">
             <div class="user-sidebar-header">
                 <h3>Menu Utilisateur</h3>
@@ -165,7 +174,7 @@
             <div class="sidebar-menu">
                 <ul>
                     <li>
-                        <a href="{{ route('admin.info') }}"><i class="fas fa-user-cog"></i> Paramètres du profil</a>
+                        <a href="{{ route('admin.info') }}"><i class="fas fa-user-cog"></i> Info de profil</a>
                     </li>
                     <li>
                         <a href="{{ route('logout') }}" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Déconnexion</a>
@@ -178,7 +187,6 @@
         <div class="overlay" id="overlay"></div>
     </div>
 
-    <script src="{{ asset('js/equi-update.js') }}"></script>
-    <script src="{{ asset('js/equi-view.js') }}"></script>
+    <script src="{{ asset('js/dashboard.js') }}"></script>
 </body>
 </html>
